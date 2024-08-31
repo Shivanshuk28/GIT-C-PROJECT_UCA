@@ -13,7 +13,7 @@ Blob *create_blob(const char *file_path) {
     fseek(file, 0, SEEK_END);
     size_t size = ftell(file);
     fseek(file, 0, SEEK_SET);
-    
+
     // Read file content
     char *content = (char *)malloc(size);
     fread(content, 1, size, file);
@@ -48,8 +48,8 @@ void write_blob(Blob *blob) {
     }
 
     // Create the file path using the remaining 38 characters of the hash
-    char file_path[256];
-    sprintf(file_path, "%s/%.38s", dir_path, hash_str + 2);
+    char file_path[512];
+    snprintf(file_path, sizeof(file_path), "%s/%.38s", dir_path, hash_str + 2);
 
     // Write the blob content to the file
     FILE *file = fopen(file_path, "wb");

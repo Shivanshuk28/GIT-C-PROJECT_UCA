@@ -40,5 +40,5 @@ void git_init() {
     }
     fclose(config);
 
-    printf("Initialized empty Git repository in .git/\n");
+    printf("Initialized empty Git repository in .trackit/\n");
 }
