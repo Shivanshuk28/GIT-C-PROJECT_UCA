@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <openssl/sha.h>
-#include "blob.h"
+#include "../include/blob.h"
 
 Blob *create_blob(const char *file_path) {
     FILE *file = fopen(file_path, "rb");

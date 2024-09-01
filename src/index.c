@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "index.h"
-#include "blob.h"
+#include "../include/index.h"
+#include "../include/blob.h"
 
 // Global pointer to the start of the index linked list
 IndexEntry *index_head = NULL;
