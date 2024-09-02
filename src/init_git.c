@@ -18,22 +18,22 @@ void git_init() {
     // Create the main .git directory
     create_directory(".trackit");
     // Create subdirectories within .git032
-    create_directory(".trackit/blobs");
-    create_directory(".trackit/branches");
-    create_directory(".trackit/branches/heads");
+    create_directory(".trackit/objects");
+    create_directory(".trackit/refs");
+    create_directory(".trackit/refs/heads");
 
     // Create the HEAD file pointing to the master branch
-    FILE *head = fopen(".trackit/current_branch", "w");
+    FILE *head = fopen(".trackit/HEAD", "w");
     if (head == NULL) {
         perror("Error creating current_branch file");
         exit(EXIT_FAILURE);
         //or could have written exit(1);
     }
-    fprintf(head, "ref: branches/heads/master\n");
+    fprintf(head, "ref: refs/heads/master\n");
     fclose(head);
 
     // Create an empty config file
-    FILE *config = fopen(".trackit/settings", "w");
+    FILE *config = fopen(".trackit/config", "w");
     if (config == NULL) {
         perror("Error creating config file");
         exit(EXIT_FAILURE);

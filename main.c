@@ -6,7 +6,7 @@
 int main() {
     char command[50];
     char file_path[100];
-
+    load_index();
     while (1) {
         printf("Enter command: ");
         fgets(command, sizeof(command), stdin);

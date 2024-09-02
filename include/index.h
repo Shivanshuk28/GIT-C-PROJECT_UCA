@@ -8,5 +8,6 @@ typedef struct IndexEntry {
 } IndexEntry;
 
 void git_add(const char *file_path);
-
+void save_index();
+void load_index();
 #endif
