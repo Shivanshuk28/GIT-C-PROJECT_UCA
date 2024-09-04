@@ -1,74 +1,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include "../include/index.h"
 #include "../include/blob.h"
 
-// Global pointer to the start of the index linked list
-IndexEntry *index_head = NULL;
+#define HASH_MAP_SIZE 1024
 
-// Function to load the index linked list from the .trackit/index file
-void load_index() {
-    FILE *file = fopen(".trackit/index", "rb");
-    if (!file) {
-        // If the file doesn't exist, there's nothing to load
+// Structure to store file metadata in the index
+typedef struct FileEntry {
+    char *file_path;            // Path to the file
+    char hash[41];              // SHA-1 hash of the file content (40 characters + null terminator)
+    struct FileEntry *next;     // Pointer to handle hash collisions (chaining)
+} FileEntry;
+
+// Global hash map to store the index entries
+FileEntry *hash_map[HASH_MAP_SIZE] = {NULL};
+
+// Function to calculate the index in the hash map from the SHA-1 hash
+unsigned int hash_function(const char *hash) {
+    unsigned int index = 0;
+    for (int i = 0; hash[i] != '\0'; i++) {
+        index = (index * 31 + hash[i]) % HASH_MAP_SIZE;
+    }
+    return index;
+}
+
+// Function to add a file to the hash map
+void add_file_to_hash_map(const char *file_path, const char *hash) {
+    unsigned int index = hash_function(hash);
+    FileEntry *new_entry = (FileEntry *)malloc(sizeof(FileEntry));
+
+    if (new_entry == NULL) {
+        fprintf(stderr, "Error: Unable to allocate memory for new entry.\n");
         return;
     }
 
-    IndexEntry *prev = NULL;
-    while (!feof(file)) {
-        // Allocate a new entry
-        IndexEntry *new_entry = (IndexEntry *)malloc(sizeof(IndexEntry));
+    new_entry->file_path = strdup(file_path);
+    strcpy(new_entry->hash, hash);
+    new_entry->next = hash_map[index];
+    hash_map[index] = new_entry;
 
-        // Read the file path length and file path
-        size_t path_len;
-        fread(&path_len, sizeof(size_t), 1, file);
-        new_entry->file_path = (char *)malloc(path_len);
-        fread(new_entry->file_path, sizeof(char), path_len, file);
-
-        // Read the hash
-        fread(new_entry->hash, sizeof(char), 41, file);
-
-        // Insert into the linked list
-        new_entry->next = NULL;
-        if (prev == NULL) {
-            index_head = new_entry;
-        } else {
-            prev->next = new_entry;
-        }
-        prev = new_entry;
-    }
-
-    fclose(file);
+    printf("Added %s to index with hash %s\n", file_path, new_entry->hash);
 }
 
-// Function to save the index linked list to the .trackit/index file
-void save_index() {
-    FILE *file = fopen(".trackit/index", "wb");
-    if (!file) {
-        perror("Error opening index file for writing");
-        return;
-    }
-
-    IndexEntry *current = index_head;
-    while (current != NULL) {
-        // Write the file path length and file path
-        size_t path_len = strlen(current->file_path) + 1; // Include null terminator
-        fwrite(&path_len, sizeof(size_t), 1, file);
-        fwrite(current->file_path, sizeof(char), path_len, file);
-
-        // Write the hash
-        fwrite(current->hash, sizeof(char), 41, file);
-
-        // Move to the next entry
-        current = current->next;
-    }
-
-    fclose(file);
-}
-
-// Function to add a file to the index
+// Function to write a blob and add its entry to the index
 void git_add(const char *file_path) {
     // Create a blob from the file
     Blob *blob = create_blob(file_path);
@@ -77,37 +52,41 @@ void git_add(const char *file_path) {
         return;
     }
 
-    // Add the file to the index linked list
-    IndexEntry *new_entry = (IndexEntry *)malloc(sizeof(IndexEntry));
-    new_entry->file_path = strdup(file_path);
-
     // Convert the SHA-1 hash to a hex string
+    char hash_hex[41];
     for (int i = 0; i < 20; i++) {
-        sprintf(&new_entry->hash[i * 2], "%02x", blob->hash[i]);
+        sprintf(&hash_hex[i * 2], "%02x", blob->hash[i]);
     }
+    hash_hex[40] = '\0';
 
-    new_entry->next = index_head;
-    index_head = new_entry;
+    // Add the file to the hash map
+    add_file_to_hash_map(file_path, hash_hex);
 
     // Write the blob to the objects directory
     write_blob(blob);
-
-    printf("Added %s to index with hash %s\n", file_path, new_entry->hash);
-
-    // Save the updated index to the file
-    save_index();
 
     // Clean up
     free(blob->content);
     free(blob);
 }
 
-// int main() {
-//     // Load the existing index from the file
-//     load_index();
+// Function to initialize the index (optional, for clearing or setup purposes)
+void init_index() {
+    for (int i = 0; i < HASH_MAP_SIZE; i++) {
+        hash_map[i] = NULL;
+    }
+}
 
-//     // Add a file
-//     git_add("cpp2.c");
-
-//     return 0;
-// }
+// Function to free the allocated memory in the hash map
+void free_index() {
+    for (int i = 0; i < HASH_MAP_SIZE; i++) {
+        FileEntry *entry = hash_map[i];
+        while (entry != NULL) {
+            FileEntry *temp = entry;
+            entry = entry->next;
+            free(temp->file_path);
+            free(temp);
+        }
+        hash_map[i] = NULL;
+    }
+}
