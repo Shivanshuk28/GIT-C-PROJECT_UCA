@@ -3,7 +3,7 @@
 
 # Git Implementation (`Trackit`)
 
-`Trackit` is a lightweight, Git-like version control system implemented in C. It provides basic functionality for tracking file changes, committing versions, and managing a simple index.
+`Trackit` is a lightweight, Git-like version control system implemented in C. It provides basic functionality for tracking file changes, committing versions, and managing a simple index, locally.
 
 ## Table of Contents
 
@@ -24,12 +24,11 @@
 
 ## Features
 
--Initialize a repository with **trackit**
-- Add files to the index with **git add <file>**
-
-- Commit changes with a message using **git commit -m "message"**
-- Shows status of the driectory using **git status**
-- Can view all commits history in **log file**
+- Initialize a repository with `**trackit**`
+- Add files to the Staging area with `**git add <file>**`
+- Commit changes with a message using `**git commit -m "message"**`
+- Shows status of the driectory using `**git status**`
+- Can view all commits history in `**log file**`
 
 
 ## Installation
@@ -49,16 +48,15 @@
     ```
 
 2. **Build the Project**:
-    Run the provided script to build and run the shell.
     ```bash
     ./run.sh
     ```
 
-This script will compile the code and run the shell executable.
+    This script will compile the code and run the shell executable.
 
 ## Usage
 
-Once the shell is running, you will see **Enter command:** option.You can type commands and hit Enter to execute them.The shell will continue running until you type exit.
+Once the program is running, you will see **Enter command:** option.You can type commands and hit Enter to execute them.The interface/shell will continue running until you type exit.
 
 
 Example:
@@ -72,7 +70,7 @@ Example:
   ```sh
   Enter command:git add "name_of_file"
   ```
-  This command adds the specified file to the index. You can add multiple files or directories as needed.
+  This command adds the specified file to the index.
 
 3 **Git status to show track of files:**
   ```sh
@@ -92,32 +90,31 @@ Example:
 ## Directory Structure
 
 ```plaintext
-── GIT_IMPLEMENTATION/
-    ├── .trackit/
+── GIT_IMPLEMENTATION/            
     ├── .vscode/
-    ├── include/
+    ├── include/              #Directory with all necessary header files
     │   ├── blob.h
     │   ├── commit.h
     │   ├── git_status.h
     │   ├── index.h
     │   └── init.h
-    ├── outputfiles/
+    ├── outputfiles/          #Output files from src files
     │   ├── blob.o
     │   ├── commit.o
     │   ├── git_status.o
     │   ├── index.o
     │   └── init_git.o
-    ├── src/
+    ├── src/                  #Src directory where all definitions are written    
     │   ├── blob.c
     │   ├── commit.c
     │   ├── git_status.c
     │   ├── index.c
     │   └── init_git.c
-    ├── main.c
-    ├── my_program
+    ├── main.c                #Entry point to the whole program
+    ├── my_program            #File created after running script file
     ├── README.md
-    ├── run.sh
-    ├── test1.txt
+    ├── run.sh                #Script file containing all execution steps
+    ├── test1.txt             #Random files to test on
     ├── test2.txt
     ├── test3.txt
     └── test4.txt
@@ -125,11 +122,12 @@ Example:
 
 - **`include/`**: Contains header files defining the structures and function prototypes.
 - **`src/`**: Contains the source code files implementing the functionality.
-- **`Makefile`**: Contains instructions for building the project.
+- **`run.sh`**: Contains instructions for running the project.
 - **`README.md`**: This file, providing documentation for the project.
 
 ## Screenshots
---A simple illustration of how will our git and git commands will look like:
+
+- **A simple illustration of how will our git and git commands will look like:**
 
   [![Screenshot-2024-09-06-023437.png](https://i.postimg.cc/65L0X4dn/Screenshot-2024-09-06-023437.png)](https://postimg.cc/SJR8Ls1x)
 
