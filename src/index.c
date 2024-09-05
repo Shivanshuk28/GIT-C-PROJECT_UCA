@@ -6,69 +6,18 @@
 
 #define HASH_MAP_SIZE 1024
 
-// Structure to store file metadata in the index
-typedef struct FileEntry {
-    char *file_path;            // Path to the file
-    char hash[41];              // SHA-1 hash of the file content (40 characters + null terminator)
-    struct FileEntry *next;     // Pointer to handle hash collisions (chaining)
-} FileEntry;
+// typedef struct BlobNode {
+//     char hash[41];
+//     struct BlobNode *next;
+// } BlobNode;
+// typedef struct {
+//     char *file_path;
+//     BlobNode *blobs; // Linked list of blobs for this file
+// } FileEntry;
 
 // Global hash map to store the index entries
-FileEntry *hash_map[HASH_MAP_SIZE] = {NULL};
+FileEntry *hash_map[HASH_MAP_SIZE];
 
-// Function to calculate the index in the hash map from the SHA-1 hash
-unsigned int hash_function(const char *hash) {
-    unsigned int index = 0;
-    for (int i = 0; hash[i] != '\0'; i++) {
-        index = (index * 31 + hash[i]) % HASH_MAP_SIZE;
-    }
-    return index;
-}
-
-// Function to add a file to the hash map
-void add_file_to_hash_map(const char *file_path, const char *hash) {
-    unsigned int index = hash_function(hash);
-    FileEntry *new_entry = (FileEntry *)malloc(sizeof(FileEntry));
-
-    if (new_entry == NULL) {
-        fprintf(stderr, "Error: Unable to allocate memory for new entry.\n");
-        return;
-    }
-
-    new_entry->file_path = strdup(file_path);
-    strcpy(new_entry->hash, hash);
-    new_entry->next = hash_map[index];
-    hash_map[index] = new_entry;
-
-    printf("Added %s to index with hash %s\n", file_path, new_entry->hash);
-}
-
-// Function to write a blob and add its entry to the index
-void git_add(const char *file_path) {
-    // Create a blob from the file
-    Blob *blob = create_blob(file_path);
-    if (blob == NULL) {
-        fprintf(stderr, "Error creating blob for %s\n", file_path);
-        return;
-    }
-
-    // Convert the SHA-1 hash to a hex string
-    char hash_hex[41];
-    for (int i = 0; i < 20; i++) {
-        sprintf(&hash_hex[i * 2], "%02x", blob->hash[i]);
-    }
-    hash_hex[40] = '\0';
-
-    // Add the file to the hash map
-    add_file_to_hash_map(file_path, hash_hex);
-
-    // Write the blob to the objects directory
-    write_blob(blob);
-
-    // Clean up
-    free(blob->content);
-    free(blob);
-}
 
 // Function to initialize the index (optional, for clearing or setup purposes)
 void init_index() {
@@ -77,16 +26,155 @@ void init_index() {
     }
 }
 
-// Function to free the allocated memory in the hash map
-void free_index() {
+
+// Simple hash function (from your implementation)
+unsigned int hash_function(const char *str) {
+    unsigned int hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    }
+    return hash % HASH_MAP_SIZE;
+}
+
+
+// Function to retrieve an entry from the hash map
+FileEntry *get_entry(const char *file_path) {
+    unsigned int index = hash_function(file_path);
+    FileEntry *entry = hash_map[index];
+
+    // Basic check to ensure the entry matches the requested file_path
+    if (entry != NULL && strcmp(entry->file_path, file_path) == 0) {
+        return entry;
+    }
+
+    return NULL; // Entry not found
+}
+
+void add_version(const char *file_path, const char *new_hash) {
+    unsigned int index = hash_function(file_path);
+    FileEntry *entry = hash_map[index];
+
+    // If entry does not exist, create a new FileEntry
+    if (entry == NULL) {
+        entry = (FileEntry *)malloc(sizeof(FileEntry));
+        entry->file_path = strdup(file_path);
+        entry->blobs = NULL;
+        hash_map[index] = entry;
+    }
+
+    // Create a new BlobNode for the new hash
+    BlobNode *new_node = (BlobNode *)malloc(sizeof(BlobNode));
+    strcpy(new_node->hash, new_hash);
+    new_node->next = entry->blobs;
+    entry->blobs = new_node;
+}
+
+void git_add(const char *file_path) {
+    // Create a new blob from the file
+    Blob *blob = create_blob(file_path);
+    if (blob == NULL) {
+        fprintf(stderr, "Error creating blob for %s\n", file_path);
+        return;
+    }
+
+    // Convert the SHA-1 hash to a hex string
+    char hash_str[41];
+    for (int i = 0; i < 20; i++) {
+        sprintf(&hash_str[i * 2], "%02x", blob->hash[i]);
+    }
+
+    // Add or update the file entry with a new version
+    add_version(file_path, hash_str);
+
+    // Write the blob to the objects directory
+    write_blob(blob);
+
+    printf("Added %s to index with hash %s\n", file_path, hash_str);
+
+    // Clean up
+    free(blob->content);
+    free(blob);
+}
+
+// Save hash_map to .trackit/index file
+void save_index() {
+    FILE *file = fopen(".trackit/index", "w");
+    if (file == NULL) {
+        perror("Error opening .trackit/index for writing");
+        return;
+    }
+
     for (int i = 0; i < HASH_MAP_SIZE; i++) {
         FileEntry *entry = hash_map[i];
         while (entry != NULL) {
-            FileEntry *temp = entry;
-            entry = entry->next;
-            free(temp->file_path);
-            free(temp);
+            fprintf(file, "%s\n", entry->file_path);
+            BlobNode *blob = entry->blobs;
+            while (blob != NULL) {
+                fprintf(file, "  %s\n", blob->hash);
+                blob = blob->next;
+            }
+            entry = NULL; // Since we don’t have next pointer, only one entry per bucket.
         }
-        hash_map[i] = NULL;
+    }
+
+    fclose(file);
+}
+
+// Function to load the index from a file
+void load_index() {
+    FILE *file = fopen(".trackit/index", "rb");
+    if (file == NULL) {
+        // perror("Error opening index file for reading");
+        return;
+    }
+
+    char file_path[256];
+    char hash[41];
+    while (fread(file_path, sizeof(file_path), 1, file) == 1) {
+        if (strlen(file_path) == 0) continue; // Skip empty entries
+        unsigned int index = hash_function(file_path);
+        FileEntry *entry = hash_map[index];
+
+        // If entry does not exist, create a new FileEntry
+        if (entry == NULL) {
+            entry = (FileEntry *)malloc(sizeof(FileEntry));
+            entry->file_path = strdup(file_path);
+            entry->blobs = NULL;
+            hash_map[index] = entry;
+        }
+
+        // Read blobs for this file
+        while (fread(hash, 41, 1, file) == 1) {
+            BlobNode *new_node = (BlobNode *)malloc(sizeof(BlobNode));
+            strcpy(new_node->hash, hash);
+            new_node->next = entry->blobs;
+            entry->blobs = new_node;
+        }
+    }
+
+    fclose(file);
+}
+
+
+void free_index() {
+    for (int i = 0; i < HASH_MAP_SIZE; i++) {
+        if (hash_map[i] != NULL) {
+            // Free the linked list of blobs
+            BlobNode *current = hash_map[i]->blobs;
+            while (current != NULL) {
+                BlobNode *temp = current;
+                current = current->next;
+                free(temp);
+            }
+            // Free the file path
+            free(hash_map[i]->file_path);
+            // Free the FileEntry itself
+            free(hash_map[i]);
+            hash_map[i] = NULL; // Set the hash_map entry to NULL
+        }
     }
 }
+
+
+

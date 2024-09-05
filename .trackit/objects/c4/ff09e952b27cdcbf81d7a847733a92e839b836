@@ -1,14 +1,19 @@
 #include <stdio.h>
 #include <string.h>
+#include<sys/stat.h>
 #include "include/init.h"
 #include "include/index.h"
 
 int main() {
     char command[50];
     char file_path[100];
-    load_index();
+    //if .trackit not present then dont load_index() else load_index()
+
+    // load_index();ll
+
     while (1) {
         printf("Enter command: ");
+        // 
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = 0; // Remove newline character
 
@@ -18,12 +23,16 @@ int main() {
         }
         // Handle 'git add <filename>' command
         else if (strncmp(command, "git add", 7) == 0) {
+            load_index();
             sscanf(command, "git add %s", file_path); // Extract the filename
             git_add(file_path); // Call the function to add the file
+            save_index();
         }
         // Handle 'exit' command to quit the program
         else if (strcmp(command, "exit") == 0) {
             printf("Exiting...\n");
+
+            save_index();
             break;
         }
         // Handle unknown commands
@@ -31,6 +40,7 @@ int main() {
             printf("Unknown command\n");
         }
     }
+    free_index();
 
     return 0;
 }

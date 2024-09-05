@@ -21,7 +21,7 @@ void git_init() {
     create_directory(".trackit/objects");
     create_directory(".trackit/refs");
     create_directory(".trackit/refs/heads");
-
+    // create_directory(".trackit/index");
     // Create the HEAD file pointing to the master branch
     FILE *head = fopen(".trackit/HEAD", "w");
     if (head == NULL) {
@@ -39,6 +39,13 @@ void git_init() {
         exit(EXIT_FAILURE);
     }
     fclose(config);
+    //create an empty index file
+    FILE *index = fopen(".trackit/index", "w");
+    if (index == NULL) {
+        perror("Error creating index file");
+        exit(EXIT_FAILURE);
+    }
+    fclose(index);
 
     printf("Initialized empty Git repository in .trackit/\n");
 }

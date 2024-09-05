@@ -24,8 +24,8 @@ int main() {
         // Handle 'git add <filename>' command
         else if (strncmp(command, "git add", 7) == 0) {
             load_index();
-            sscanf(command, "git add %s", file_path); // 
-            git_add(file_path); 
+            sscanf(command, "git add %s", file_path); // Extract the filename
+            git_add(file_path); // Call the function to add the file
             save_index();
         }
         // Handle 'exit' command to quit the program
