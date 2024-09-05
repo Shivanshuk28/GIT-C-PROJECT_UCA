@@ -24,7 +24,7 @@
 
 ## Features
 
-Initialize a repository with trackit init
+-Initialize a repository with **trackit**
 - **Built-in Commands**: Includes built-in commands like `cd`, `help`, and `exit`.
 - **Custom Command Parsing**: Supports basic command parsing and argument handling.
 - **Error Handling**: Provides error messages for invalid commands and improper usage.
