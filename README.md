@@ -92,8 +92,7 @@ Example:
 ## Directory Structure
 
 ```plaintext
-.
-└── GIT_IMPLEMENTATION/
+── GIT_IMPLEMENTATION/
     ├── .trackit/
     ├── .vscode/
     ├── include/
@@ -128,6 +127,11 @@ Example:
 - **`src/`**: Contains the source code files implementing the functionality.
 - **`Makefile`**: Contains instructions for building the project.
 - **`README.md`**: This file, providing documentation for the project.
+
+## Screenshots
+--A simple illustration of how will our git and git commands will look like:
+
+  [![Screenshot-2024-09-06-023437.png](https://i.postimg.cc/65L0X4dn/Screenshot-2024-09-06-023437.png)](https://postimg.cc/SJR8Ls1x)
 
 
 ---
