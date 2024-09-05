@@ -19,6 +19,7 @@ unsigned int hash_function(const char *str);
 FileEntry *get_entry(const char *file_path);
 void add_version(const char *file_path, const char *new_hash);
 void git_add(const char *file_path);
+int is_entry_present(const char *file_path, const char *hash);
 void save_index();
 void free_index();
 void load_index();

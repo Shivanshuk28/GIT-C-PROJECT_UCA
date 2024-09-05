@@ -6,14 +6,6 @@
 
 #define HASH_MAP_SIZE 1024
 
-// typedef struct BlobNode {
-//     char hash[41];
-//     struct BlobNode *next;
-// } BlobNode;
-// typedef struct {
-//     char *file_path;
-//     BlobNode *blobs; // Linked list of blobs for this file
-// } FileEntry;
 
 // Global hash map to store the index entries
 FileEntry *hash_map[HASH_MAP_SIZE];
@@ -97,9 +89,29 @@ void git_add(const char *file_path) {
     free(blob);
 }
 
-// Save hash_map to .trackit/index file
+// Helper function to check if a file path and hash are already in the index
+int is_entry_present(const char *file_path, const char *hash) {
+    FILE *file = fopen(".trackit/index", "r");
+    if (file == NULL) {
+        return 0; // If file doesn't exist, entry can't be present
+    }
+
+    char existing_file_path[256];
+    char existing_hash[41];
+
+    while (fscanf(file, "%s %s", existing_file_path, existing_hash) == 2) {
+        if (strcmp(existing_file_path, file_path) == 0 && strcmp(existing_hash, hash) == 0) {
+            fclose(file);
+            return 1; // Entry found
+        }
+    }
+
+    fclose(file);
+    return 0; // Entry not found
+}
+
 void save_index() {
-    FILE *file = fopen(".trackit/index", "w");
+    FILE *file = fopen(".trackit/index", "a");
     if (file == NULL) {
         perror("Error opening .trackit/index for writing");
         return;
@@ -108,10 +120,13 @@ void save_index() {
     for (int i = 0; i < HASH_MAP_SIZE; i++) {
         FileEntry *entry = hash_map[i];
         while (entry != NULL) {
-            fprintf(file, "%s\n", entry->file_path);
             BlobNode *blob = entry->blobs;
             while (blob != NULL) {
-                fprintf(file, "  %s\n", blob->hash);
+                // Only write the entry if it's not already present in the indexs
+                if (!is_entry_present(entry->file_path, blob->hash)) {
+                    fprintf(file, "%s %s\n", entry->file_path, blob->hash);
+                }
+                
                 blob = blob->next;
             }
             entry = NULL; // Since we don’t have next pointer, only one entry per bucket.
@@ -120,6 +135,9 @@ void save_index() {
 
     fclose(file);
 }
+
+
+
 
 // Function to load the index from a file
 void load_index() {

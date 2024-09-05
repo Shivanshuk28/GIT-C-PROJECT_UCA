@@ -1,0 +1,6 @@
+hello from 1_testing.txt
+ok
+jiji
+lope
+lope
+ddx
