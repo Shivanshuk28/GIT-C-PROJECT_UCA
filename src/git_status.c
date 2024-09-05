@@ -56,17 +56,18 @@ void git_status() {
                 // File is in the index, compare its current hash
                 BlobNode *current_blob = entry_in_index->blobs;
                 if (strcmp(current_blob->hash, file_hash) == 0) {
-                    printf("%s is staged for commit.\n", file_name);
+                    printf("\033[0;32m%s is staged for commit.\n", file_name);
                 } else {
-                    printf("%s has been modified but not added.\n", file_name);
+                    printf("\033[0;34m%s has been modified but not added.\n", file_name);
                 }
             } else {
                 // File is not in the index
-                printf("\033[31m%s is untracked.\n", file_name);
+                printf("\033[0;31m%s is untracked.\n", file_name);
             }
 
             free(file_hash);  // Clean up memory after calculating hash
         }
+        printf("\033[0m");
     }
 
     closedir(dir);

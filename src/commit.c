@@ -2,18 +2,46 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <openssl/sha.h>
 #include "../include/commit.h"
 #include "../include/index.h"
 
 #define LOG_FILE ".trackit/log"
 
-// Function to generate a unique commit ID (you can improve this as needed)
+// Function to generate a hash of the index file content (used as commit ID)
 char *generate_commit_id() {
-    time_t now = time(NULL);
-    char *commit_id = (char *)malloc(11 * sizeof(char));
-    snprintf(commit_id, 11, "%lx", now);  // Convert timestamp to hex
+    FILE *index_file = fopen(".trackit/index", "rb");
+    if (index_file == NULL) {
+        perror("Error opening index file");
+        return NULL;
+    }
+
+    // Calculate file size
+    fseek(index_file, 0, SEEK_END);
+    long file_size = ftell(index_file);
+    fseek(index_file, 0, SEEK_SET);
+
+    // Read the entire file content
+    unsigned char *file_content = (unsigned char *)malloc(file_size);
+    fread(file_content, 1, file_size, index_file);
+    fclose(index_file);
+
+    // Compute SHA-1 hash of the entire file content
+    unsigned char hash[SHA_DIGEST_LENGTH];
+    SHA1(file_content, file_size, hash);
+
+    // Convert the hash to a hex string
+    char *commit_id = (char *)malloc(2 * SHA_DIGEST_LENGTH + 1); // 40 hex chars + null terminator
+    for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
+        sprintf(&commit_id[i * 2], "%02x", hash[i]);
+    }
+    commit_id[2 * SHA_DIGEST_LENGTH] = '\0'; // Null terminator
+
+    free(file_content); // Clean up
+
     return commit_id;
 }
+
 // Function to get the current timestamp
 char *get_timestamp() {
     time_t now = time(NULL);
@@ -22,82 +50,61 @@ char *get_timestamp() {
     return timestamp;
 }
 
-// Helper function to check if the file was already committed with the same hash
-int is_already_committed(const char *file_path, const char *hash) {
+void git_commit(const char *message) {
+    // Generate commit ID based on the index file hash
+    char *commit_id = generate_commit_id();
+    if (commit_id == NULL) {
+        return;
+    }
+
+    // Check if a commit with the same ID already exists
     FILE *log_file = fopen(LOG_FILE, "r");
     if (log_file == NULL) {
-        return 0; // Log file doesn't exist yet, meaning no commits
+        perror("Error opening log file");
+        free(commit_id);
+        return;
     }
 
     char line[256];
-    char committed_file[256];
-    char committed_hash[41];
-
-    // Look for the file path and its corresponding hash
+    int commit_exists = 0;
     while (fgets(line, sizeof(line), log_file)) {
-        // Parse the line to find file paths and hashes in the log
-        if (sscanf(line, "- %255s: %40s", committed_file, committed_hash) == 2) {
-            // Check if the file path and hash match
-            if (strcmp(file_path, committed_file) == 0 && strcmp(hash, committed_hash) == 0) {
-                fclose(log_file);
-                return 1;  // File has already been committed with the same hash
-            }
+        // Check if the line contains the commit ID
+        if (strncmp(line, "Commit ID: ", 11) == 0 && strstr(line, commit_id) != NULL) {
+            commit_exists = 1;
+            break;
         }
     }
-
     fclose(log_file);
-    return 0;
-}
-void git_commit(const char *message) {
-    int changes_found = 0;
 
-    // First, check if there are any changes in the tracked files
-    for (int i = 0; i < HASH_MAP_SIZE; i++) {
-        FileEntry *entry = hash_map[i];
-        if (entry != NULL) {
-            BlobNode *blob = entry->blobs;
-            while (blob != NULL) {
-                if (!is_already_committed(entry->file_path, blob->hash)) {
-                    changes_found = 1;
-                    break;  // We found changes, no need to check further
-                }
-                blob = blob->next;
-            }
-        }
-        if (changes_found) break;
-    }
-
-    // If no changes are found, exit the function
-    if (!changes_found) {
-        printf("No changes found. Commit not created.\n");
+    if (commit_exists) {
+        printf("No changes detected. Commit with ID %s already exists.\n", commit_id);
+        free(commit_id);
         return;
     }
 
-    // If changes are found, proceed to write commit info to the log file
-    FILE *log_file = fopen(LOG_FILE, "a");
+    // Open log file for appending
+    log_file = fopen(LOG_FILE, "a");
     if (log_file == NULL) {
         perror("Error opening log file");
+        free(commit_id);
         return;
     }
 
-    char *commit_id = generate_commit_id();
     char *timestamp = get_timestamp();
 
-    // Write basic commit info
+    // Write commit information to the log file
     fprintf(log_file, "Commit ID: %s\n", commit_id);
     fprintf(log_file, "Timestamp: %s\n", timestamp);
     fprintf(log_file, "Message: %s\n", message);
 
-    // Save file paths and their corresponding blob hashes (tracked files)
+    // Save file paths and their corresponding blob hashes
     fprintf(log_file, "Files:\n");
     for (int i = 0; i < HASH_MAP_SIZE; i++) {
         FileEntry *entry = hash_map[i];
         if (entry != NULL) {
             BlobNode *blob = entry->blobs;
             while (blob != NULL) {
-                if (!is_already_committed(entry->file_path, blob->hash)) {
-                    fprintf(log_file, "- %s: %s\n", entry->file_path, blob->hash);
-                }
+                fprintf(log_file, "- %s: %s\n", entry->file_path, blob->hash);
                 blob = blob->next;
             }
         }

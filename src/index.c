@@ -190,7 +190,7 @@ void free_index() {
             free(hash_map[i]->file_path);
             // Free the FileEntry itself
             free(hash_map[i]);
-            hash_map[i] = NULL; // Set the hash_map entry to NULL
+            hash_map[i] = NULL; // Set the hash_map entry to NULLdd
         }
     }
 }
