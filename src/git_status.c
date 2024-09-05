@@ -62,7 +62,7 @@ void git_status() {
                 }
             } else {
                 // File is not in the index
-                printf("%s is untracked.\n", file_name);
+                printf("\033[31m%s is untracked.\n", file_name);
             }
 
             free(file_hash);  // Clean up memory after calculating hash

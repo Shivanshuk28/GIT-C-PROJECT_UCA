@@ -47,5 +47,13 @@ void git_init() {
     }
     fclose(index);
 
+    //create an empty log file
+    FILE *log = fopen(".trackit/log", "w");
+    if (log == NULL) {
+        perror("Error creating log file");
+        exit(EXIT_FAILURE);
+    }
+    fclose(log);
+
     printf("Initialized empty Git repository in .trackit/\n");
 }

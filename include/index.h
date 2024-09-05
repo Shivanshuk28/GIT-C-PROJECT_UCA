@@ -1,7 +1,7 @@
 // index.h
 #ifndef INDEX_H
 #define INDEX_H
-
+#define HASH_MAP_SIZE 1024
 typedef struct BlobNode {
     char hash[41];
     struct BlobNode *next;

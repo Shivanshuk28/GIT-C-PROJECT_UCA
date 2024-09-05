@@ -90,6 +90,7 @@ void git_add(const char *file_path) {
 }
 
 // Helper function to check if a file path and hash are already in the index
+
 int is_entry_present(const char *file_path, const char *hash) {
     FILE *file = fopen(".trackit/index", "r");
     if (file == NULL) {
@@ -98,20 +99,21 @@ int is_entry_present(const char *file_path, const char *hash) {
 
     char existing_file_path[256];
     char existing_hash[41];
+    int found = 0;
 
     while (fscanf(file, "%s %s", existing_file_path, existing_hash) == 2) {
         if (strcmp(existing_file_path, file_path) == 0 && strcmp(existing_hash, hash) == 0) {
-            fclose(file);
-            return 1; // Entry found
+            found = 1; // Entry found
+            break;
         }
     }
 
     fclose(file);
-    return 0; // Entry not found
+    return found;
 }
 
 void save_index() {
-    FILE *file = fopen(".trackit/index", "a");
+    FILE *file = fopen(".trackit/index", "w");
     if (file == NULL) {
         perror("Error opening .trackit/index for writing");
         return;
@@ -135,8 +137,6 @@ void save_index() {
 
     fclose(file);
 }
-
-
 
 
 // Function to load the index from a file
@@ -185,6 +185,7 @@ void free_index() {
                 current = current->next;
                 free(temp);
             }
+
             // Free the file path
             free(hash_map[i]->file_path);
             // Free the FileEntry itself
