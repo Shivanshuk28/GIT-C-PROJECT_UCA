@@ -24,11 +24,11 @@
 
 ## Features
 
-- Initialize a repository with `**trackit**`
-- Add files to the Staging area with `**git add <file>**`
-- Commit changes with a message using `**git commit -m "message"**`
-- Shows status of the driectory using `**git status**`
-- Can view all commits history in `**log file**`
+- Initialize a repository with **`trackit`**
+- Add files to the Staging area with **`git add <file>`**
+- Commit changes with a message using **`git commit -m "message"`**
+- Shows status of the driectory using **`git status`**
+- Can view all commits history in **`log file`**
 
 
 ## Installation
