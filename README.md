@@ -25,9 +25,12 @@
 ## Features
 
 -Initialize a repository with **trackit**
-- **Built-in Commands**: Includes built-in commands like `cd`, `help`, and `exit`.
-- **Custom Command Parsing**: Supports basic command parsing and argument handling.
-- **Error Handling**: Provides error messages for invalid commands and improper usage.
+- Add files to the index with **git add <file>**
+
+- Commit changes with a message using **git commit -m "message"**
+- Shows status of the driectory using **git status**
+- Can view all commits history in **log file**
+
 
 ## Installation
 
@@ -41,8 +44,8 @@
 
 1. **Clone the Repository**:
     ```bash
-    git clone https://github.com/ShivamBajpai04/C-Project.git
-    cd C-Project
+    git clone https://github.com/Shivanshuk28/GIT-C-PROJECT_UCA.git
+    cd GIT_IMPLEMENTATION 
     ```
 
 2. **Build the Project**:
@@ -55,46 +58,76 @@ This script will compile the code and run the shell executable.
 
 ## Usage
 
-Once the shell is running, you will see a prompt (`>`). You can type commands and hit Enter to execute them. The shell will continue running until you type `exit`.
+Once the shell is running, you will see **Enter command:** option.You can type commands and hit Enter to execute them.The shell will continue running until you type exit.
+
 
 Example:
-```sh
-> ls -l
-> cd /path/to/directory
-> help
-> exit
-```
+1  **Initialize a Repository**
+  ```sh
+  Enter command:trackit
+  ```
+  This command creates a .trackit directory in your current working directory.
+
+2  **Add Files to the Index:**
+  ```sh
+  Enter command:git add "name_of_file"
+  ```
+  This command adds the specified file to the index. You can add multiple files or directories as needed.
+
+3 **Git status to show track of files:**
+  ```sh
+  Enter command:git status
+  ```
+
+4 **Commit Changes:**
+  ```sh
+  Enter command:git commit -m "message"
+  ```
+  This command creates a commit with the specified message. The commit ID is generated based on the SHA-1 hash of the index file.
+
+
+
+
 
 ## Directory Structure
 
 ```plaintext
-proj/
-├── bin/                # Compiled binary files
-│   └── proj            # The proj shell executable
-├── include/            # Header files
-│   └── proj.h          # Function declarations and macros
-├── obj/                # Object files
-│   ├── builtins.o
-│   ├── execute.o
-│   ├── proj.o
-│   └── utils.o
-├── src/                # Source files
-│   ├── builtins.c      # Built-in command implementations
-│   ├── execute.c       # Command execution logic
-│   ├── proj.c          # Main entry point
-│   └── utils.c         # Utility functions
-├── Makefile            # Build configuration
-└── README.md           # Project documentation (this file)
+.
+└── GIT_IMPLEMENTATION/
+    ├── .trackit/
+    ├── .vscode/
+    ├── include/
+    │   ├── blob.h
+    │   ├── commit.h
+    │   ├── git_status.h
+    │   ├── index.h
+    │   └── init.h
+    ├── outputfiles/
+    │   ├── blob.o
+    │   ├── commit.o
+    │   ├── git_status.o
+    │   ├── index.o
+    │   └── init_git.o
+    ├── src/
+    │   ├── blob.c
+    │   ├── commit.c
+    │   ├── git_status.c
+    │   ├── index.c
+    │   └── init_git.c
+    ├── main.c
+    ├── my_program
+    ├── README.md
+    ├── run.sh
+    ├── test1.txt
+    ├── test2.txt
+    ├── test3.txt
+    └── test4.txt
 ```
 
-## Built-in Commands
+- **`include/`**: Contains header files defining the structures and function prototypes.
+- **`src/`**: Contains the source code files implementing the functionality.
+- **`Makefile`**: Contains instructions for building the project.
+- **`README.md`**: This file, providing documentation for the project.
 
-The `proj` shell includes the following built-in commands:
-
-- **`cd [directory]`**: Change the current directory to `[directory]`. If no directory is provided, an error is displayed.
-- **`help`**: Display information about the shell and the available built-in commands.
-- **`exit`**: Exit the shell.
-
-If a command is not recognized as a built-in command, `proj` will attempt to execute it as an external program.
 
 ---
